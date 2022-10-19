@@ -1,4 +1,5 @@
 import { Component, Input, OnInit } from '@angular/core';
+import { AssetInfo, TokenData } from 'src/types/TokenData';
 
 @Component({
   selector: 'app-nft-card',
@@ -6,11 +7,20 @@ import { Component, Input, OnInit } from '@angular/core';
   styleUrls: ['./nft-card.component.scss'],
 })
 export class NftCardComponent implements OnInit {
-  @Input() name = 'The Coldest Sunset';
-  @Input() description = 'Undefined';
-  @Input() image = '/img/card-top.jpg';
+  @Input() token: TokenData | null = null;
+  tokenInfo: AssetInfo | null = null;
 
   constructor() {}
 
-  ngOnInit(): void {}
+  ngOnInit(): void {
+    this.fetchInfo();
+  }
+
+  async fetchInfo(): Promise<void> {
+    const dataURI = this.token?.metaplexData?.data?.data?.uri;
+    if (dataURI) {
+      this.tokenInfo = (await (await fetch(dataURI)).json()) as AssetInfo;
+      console.log(this.tokenInfo);
+    }
+  }
 }

@@ -1,9 +1,20 @@
 import * as spl from '@solana/spl-token';
 import { Injectable } from '@angular/core';
-import { Connection, PublicKey } from '@solana/web3.js';
-import { PROGRAM_ID as TOKEN_METADATA_PROGRAM_ID } from '@metaplex-foundation/mpl-token-metadata';
+import {
+  AccountInfo,
+  Commitment,
+  Connection,
+  GetMultipleAccountsConfig,
+  ParsedAccountData,
+  PublicKey,
+} from '@solana/web3.js';
+import {
+  Metadata,
+  PROGRAM_ID as TOKEN_METADATA_PROGRAM_ID,
+} from '@metaplex-foundation/mpl-token-metadata';
 import { findProgramAddressSync } from '@project-serum/anchor/dist/cjs/utils/pubkey';
 import { environment } from 'src/environments/environment';
+import { TokenData } from 'src/types/TokenData';
 
 @Injectable({
   providedIn: 'root',
@@ -28,7 +39,34 @@ export class NftProviderService {
     );
   }
 
-  async getTokensOfOwner(address: string): Promise<void> {
+  async getBatchedMultipleAccounts(
+    connection: Connection,
+    ids: PublicKey[],
+    config?: GetMultipleAccountsConfig,
+    batchSize = 100
+  ): Promise<(AccountInfo<Buffer | ParsedAccountData> | null)[]> {
+    const batches: PublicKey[][] = [[]];
+    ids.forEach((id) => {
+      const batch = batches[batches.length - 1];
+      if (batch) {
+        if (batch.length >= batchSize) {
+          batches.push([id]);
+        } else {
+          batch.push(id);
+        }
+      }
+    });
+    const batchAccounts = await Promise.all(
+      batches.map((b) =>
+        b.length > 0
+          ? connection.getMultipleAccountsInfo(b, config as Commitment)
+          : []
+      )
+    );
+    return batchAccounts.flat();
+  }
+
+  async getTokensOfOwner(address: string): Promise<TokenData[]> {
     const pubkey = new PublicKey(address);
     const allTokenAccounts =
       await this.connection.getParsedTokenAccountsByOwner(pubkey, {
@@ -51,6 +89,35 @@ export class NftProviderService {
       )
     );
 
-    console.log(tokenAccounts);
+    const metaplexAccountInfos = await this.getBatchedMultipleAccounts(
+      this.connection,
+      metaplexIds
+    );
+
+    const metaplexData = metaplexAccountInfos.reduce(
+      (acc, accountInfo, i) => {
+        try {
+          acc[tokenAccounts[i]!.pubkey.toString()] = {
+            pubkey: metaplexIds[i]!,
+            ...accountInfo,
+            data: Metadata.deserialize(accountInfo?.data as Buffer, 0)[0],
+          };
+        } catch (e) {}
+        return acc;
+      },
+      {} as {
+        [tokenAccountId: string]: {
+          pubkey: PublicKey;
+          data: Metadata;
+        };
+      }
+    );
+
+    const tokens: TokenData[] = tokenAccounts.map((tokenAccount) => ({
+      tokenAccount,
+      metaplexData: metaplexData[tokenAccount.pubkey.toString()],
+    }));
+
+    return tokens;
   }
 }

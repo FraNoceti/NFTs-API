@@ -1,5 +1,6 @@
 import { Component, Input, OnInit } from '@angular/core';
 import { NftProviderService } from 'src/services/nft-provider.service';
+import { TokenData } from 'src/types/TokenData';
 
 @Component({
   selector: 'app-nft-viewer',
@@ -9,9 +10,16 @@ import { NftProviderService } from 'src/services/nft-provider.service';
 export class NftViewerComponent implements OnInit {
   @Input() address: string = '';
 
+  nftList: TokenData[] = [];
+
   constructor(private nftProvider: NftProviderService) {}
 
   ngOnInit(): void {
-    this.nftProvider.getTokensOfOwner(this.address);
+    this.getTokenList();
+  }
+
+  async getTokenList(): Promise<void> {
+    this.nftList = await this.nftProvider.getTokensOfOwner(this.address);
+    console.log(this.nftList);
   }
 }

@@ -4,7 +4,7 @@
 
 export const environment = {
   production: false,
-  RPC_ENDPOINT: 'https://api.mainnet-beta.solana.com',
+  RPC_ENDPOINT: 'https://solana-api.projectserum.com',
 };
 
 /*

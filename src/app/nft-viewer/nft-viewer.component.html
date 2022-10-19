@@ -1,5 +1,7 @@
 <div class="h-screen w-100 flex justify-center items-center">
-  <div class="w-100">
-    <app-nft-card></app-nft-card>
+  <div class="w-100 flex flex-row">
+    <div *ngFor="let tokenData of nftList" class="mr-4">
+      <app-nft-card [token]="tokenData"></app-nft-card>
+    </div>
   </div>
 </div>
