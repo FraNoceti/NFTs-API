@@ -1,11 +1,15 @@
-<div class="w-100 flex justify-center items-center p-3" *ngIf="tokenInfo">
+<div class="w-100 flex justify-center items-center p-3" *ngIf="token && tokenInfo">
   <div class="w-100">
     <div class="max-w-sm rounded overflow-hidden shadow-lg p-3 bg-slate-50">
       <img class="mx-auto h-[300px] object-cover" [src]="tokenInfo.image" onerror="this.src = '/assets/empty-nft.jpg'"
         alt="Sunset in the mountains">
       <div class="px-6 py-4">
         <div class="font-bold text-xl mb-2">
-          <a href="{{ tokenInfo.external_url ? tokenInfo.external_url : '#' }}">
+          <!-- <a href="{{ tokenInfo.external_url ? tokenInfo.external_url : '#' }}" target="_blank">
+            {{ tokenInfo.name }}
+          </a> -->
+          <a href="{{ 'https://explorer.solana.com/address/' + token.tokenAccount?.account?.data?.parsed.info.mint }}"
+            target="_blank">
             {{ tokenInfo.name }}
           </a>
         </div>

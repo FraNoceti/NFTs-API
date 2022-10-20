@@ -14,6 +14,7 @@ export class NftCardComponent implements OnInit {
 
   ngOnInit(): void {
     this.fetchInfo();
+    console.log(this.token);
   }
 
   async fetchInfo(): Promise<void> {
